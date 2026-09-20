@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import * as swordService from '../services/swordService.js';
 import * as viewService from '../services/viewService.js';
 import type { SwordFilterParams, ApiResponse } from '../../../shared/types.js';
@@ -60,28 +60,37 @@ export const getSwordById = (req: Request, res: Response) => {
   res.json(response);
 };
 
-export const getSwordViews = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const count = await viewService.getViews(id);
+export const getSwordViews = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const count = await viewService.getViews(id);
 
-  const response: ApiResponse<{ count: number }> = {
-    code: 200,
-    message: 'success',
-    data: { count },
-  };
+    const response: ApiResponse<{ count: number }> = {
+      code: 200,
+      message: 'success',
+      data: { count },
+    };
 
-  res.json(response);
+    res.json(response);
+  } catch (error) {
+    // 交给全局错误中间件返回 500,避免未捕获的 rejection 使进程崩溃
+    next(error);
+  }
 };
 
-export const addSwordView = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const count = await viewService.addView(id);
+export const addSwordView = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const count = await viewService.addView(id);
 
-  const response: ApiResponse<{ count: number }> = {
-    code: 200,
-    message: 'success',
-    data: { count },
-  };
+    const response: ApiResponse<{ count: number }> = {
+      code: 200,
+      message: 'success',
+      data: { count },
+    };
 
-  res.json(response);
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
 };

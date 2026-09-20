@@ -1,6 +1,11 @@
 import { swords } from '../data/swords.js';
 import type { Sword, SwordFilterParams, SwordListResponse } from '../../../shared/types.js';
 
+// 用户输入按字面文本匹配,转义正则元字符,
+// 避免 `[` `(` 等非法正则直接抛错,也避免 `.` `*` 等改变匹配语义
+const escapeRegExp = (text: string): string =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const getSwords = (params: SwordFilterParams): SwordListResponse => {
   const { page = 1, limit = 10, dynasty, sect, keyword, sortBy = 'popularity', sortOrder = 'desc' } = params;
   
@@ -15,7 +20,7 @@ export const getSwords = (params: SwordFilterParams): SwordListResponse => {
   }
   
   if (keyword) {
-    const pattern = new RegExp(keyword, 'i');
+    const pattern = new RegExp(escapeRegExp(keyword), 'i');
     filteredSwords = filteredSwords.filter(s => 
       pattern.test(s.name) ||
       pattern.test(s.alias) ||

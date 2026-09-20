@@ -18,11 +18,19 @@ export function cachedQuery<T>(key: string, fetcher: Fetcher<T>): Promise<T> {
     return pending as Promise<T>;
   }
 
-  const promise = fetcher().then((data) => {
-    settled.set(key, data);
-    inflight.delete(key);
-    return data;
-  });
+  const promise = fetcher().then(
+    (data) => {
+      settled.set(key, data);
+      inflight.delete(key);
+      return data;
+    },
+    (error) => {
+      // 失败的结果不进缓存:清理 inflight,让下一次调用重新发起请求,
+      // 否则一次瞬时故障会让这个 key 永远返回缓存的失败
+      inflight.delete(key);
+      throw error;
+    },
+  );
 
   inflight.set(key, promise);
   return promise;
