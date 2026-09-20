@@ -1,7 +1,15 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import * as swordService from '../services/swordService.js';
 import * as viewService from '../services/viewService.js';
 import type { SwordFilterParams, ApiResponse } from '../../../shared/types.js';
+
+// Express 4 不会自动捕获 async handler 的 rejection，
+// 包一层把异常交给全局错误中间件，避免请求悬挂
+const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>): RequestHandler =>
+  (req, res, next) => {
+    fn(req, res, next).catch(next);
+  };
 
 export const getSwords = (req: Request, res: Response) => {
   const params: SwordFilterParams = {
@@ -60,7 +68,7 @@ export const getSwordById = (req: Request, res: Response) => {
   res.json(response);
 };
 
-export const getSwordViews = async (req: Request, res: Response) => {
+export const getSwordViews = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const count = await viewService.getViews(id);
 
@@ -71,9 +79,9 @@ export const getSwordViews = async (req: Request, res: Response) => {
   };
 
   res.json(response);
-};
+});
 
-export const addSwordView = async (req: Request, res: Response) => {
+export const addSwordView = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const count = await viewService.addView(id);
 
@@ -84,4 +92,4 @@ export const addSwordView = async (req: Request, res: Response) => {
   };
 
   res.json(response);
-};
+});

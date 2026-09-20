@@ -15,7 +15,10 @@ export const getSwords = (params: SwordFilterParams): SwordListResponse => {
   }
   
   if (keyword) {
-    const pattern = new RegExp(keyword, 'i');
+    // 关键词按字面量做不区分大小写的包含匹配；
+    // 先转义正则元字符，避免用户输入 [ * \ 等字符时 RegExp 构造抛错
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(escaped, 'i');
     filteredSwords = filteredSwords.filter(s => 
       pattern.test(s.name) ||
       pattern.test(s.alias) ||
